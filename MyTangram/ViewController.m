@@ -8,10 +8,17 @@
 
 #import "ViewController.h"
 #import "LMTangramDefaultItemModelFactory.h"
+#import "LMTangramDefaultDataSourceHelper.h"
+#import "TangramBus.h"
+#import "TangramVi"
 
 @interface ViewController ()
 
 @property (nonatomic, strong) NSMutableArray *layoutModelArray;
+
+@property  (nonatomic, strong) TangramBus *tangramBus;
+
+@property (nonatomic, strong) TangramView *tangramView;
 
 @end
 
@@ -22,7 +29,8 @@
     // Do any additional setup after loading the view, typically from a nib.
     
     // 首先要解析数据
-    
+    [self loadMockContent];
+    [self registEvent];
 }
 
 - (void)loadMockContent {
@@ -37,6 +45,11 @@
     [LMTangramDefaultItemModelFactory registElementType:@"image" className:@"TangramSingleImageElement"];
     [LMTangramDefaultItemModelFactory registElementType:@"text" className:@"TangramSimpleTextElement"];
     
+    self.layoutModelArray = [LMTangramDefaultDataSourceHelper layoutsWithArray:self.layoutModelArray tangramBus:self.tangramBus];
+}
+
+- (void)registEvent {
+    [self.tangramBus registerAction:@"responseToClickEvent:" ofExecuter:self onEventTopic:@"jumpAction"];
 }
 
 - (void)didReceiveMemoryWarning {
@@ -44,5 +57,26 @@
     // Dispose of any resources that can be recreated.
 }
 
+#pragma mark - getter & setter
+
+- (TangramBus *)tangramBus
+{
+    if (nil == _tangramBus) {
+        _tangramBus = [[TangramBus alloc]init];
+    }
+    return _tangramBus;
+}
+
+-(TangramView *)tangramView
+{
+    if (nil == _tangramView) {
+        _tangramView = [[TangramView alloc]init];
+        _tangramView.frame = self.view.bounds;
+        [_tangramView setDataSource:self];
+        _tangramView.backgroundColor = [UIColor whiteColor];
+        [self.view addSubview:_tangramView];
+    }
+    return _tangramView;
+}
 
 @end

@@ -21,9 +21,6 @@
 /**
  从JSON数据中生成layout的数组。
 
- @param dictArray <#dictArray description#>
- @param tangramBus <#tangramBus description#>
- @return <#return value description#>
  */
 +(NSArray<UIView<LMTangramLayoutProtocol> *> *)layoutsWithArray: (NSArray<NSDictionary *> *)dictArray
                                                    tangramBus: (TangramBus *)tangramBus;
