@@ -29,6 +29,8 @@ typedef NSString TangramLayoutType;
 @property (nonatomic, weak) TangramBus *tangramBus;
 // identifier for layout
 @property (nonatomic, strong) NSString *identifier;
+
+// itemMode的位置
 // Calculate itemModel position
 - (void)calculateLayout;
 - (void)heightChangedWithElement:(UIView *)element model:(NSObject<LMTangramItemModelProtocol> *)model;

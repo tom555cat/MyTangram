@@ -64,4 +64,15 @@
 - (UIView *)dequeueReusableItemWithIdentifier:(NSString *)identifier;
 
 
+/**
+ Hide all visible items and recycle reusable item views.
+ After call this method, every item view will receive
+ 'afterGetView' & 'didEnterWithTimes' again.
+ 
+ @param enableRecycle  Recycle items or remove them.
+ */
+- (void)clearVisibleItems:(BOOL)enableRecycle;
+
+- (void)reloadData;
+
 @end

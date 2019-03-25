@@ -75,7 +75,16 @@
 
 @interface TangramView : TMLazyScrollView
 
+// Contains layouts in TangramView. Key ：layout index；value：layout
+@property   (nonatomic, strong, readonly) NSMutableDictionary     *layoutDict;
+
+// Enable margin deduplication function.
+@property   (nonatomic, assign) BOOL enableMarginDeduplication;
+
 - (void)setDataSource:(id<TangramViewDatasource>)dataSource;
+
+// Refresh view according to datasource.
+- (void)reloadData;
 
 @end
 
