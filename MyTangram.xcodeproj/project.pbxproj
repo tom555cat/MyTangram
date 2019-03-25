@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8E344AF92248770E008F9E9F /* TMLazyReusePool.m in Sources */ = {isa = PBXBuildFile; fileRef = 8E344AF82248770E008F9E9F /* TMLazyReusePool.m */; };
+		8E344B00224877E5008F9E9F /* TangramView.m in Sources */ = {isa = PBXBuildFile; fileRef = 8E344AFF224877E5008F9E9F /* TangramView.m */; };
+		8E344B0322488405008F9E9F /* UIView+TMLazyScrollView.m in Sources */ = {isa = PBXBuildFile; fileRef = 8E344B0222488405008F9E9F /* UIView+TMLazyScrollView.m */; };
+		8E344B08224888A3008F9E9F /* LMTangramDefaultElementFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = 8E344B07224888A3008F9E9F /* LMTangramDefaultElementFactory.m */; };
 		E976AAD42247B2EE0017EC79 /* TangramDefaultItemModel.m in Sources */ = {isa = PBXBuildFile; fileRef = E976AAD32247B2EE0017EC79 /* TangramDefaultItemModel.m */; };
 		E976AADA2247D7B00017EC79 /* TMLazyScrollView.m in Sources */ = {isa = PBXBuildFile; fileRef = E976AAD92247D7B00017EC79 /* TMLazyScrollView.m */; };
 		E977034522463FF6006EBCF9 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = E977034422463FF6006EBCF9 /* AppDelegate.m */; };
@@ -52,6 +56,17 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		8E344AF72248770E008F9E9F /* TMLazyReusePool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TMLazyReusePool.h; sourceTree = "<group>"; };
+		8E344AF82248770E008F9E9F /* TMLazyReusePool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TMLazyReusePool.m; sourceTree = "<group>"; };
+		8E344AFE224877E5008F9E9F /* TangramView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TangramView.h; sourceTree = "<group>"; };
+		8E344AFF224877E5008F9E9F /* TangramView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TangramView.m; sourceTree = "<group>"; };
+		8E344B0122488405008F9E9F /* UIView+TMLazyScrollView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "UIView+TMLazyScrollView.h"; sourceTree = "<group>"; };
+		8E344B0222488405008F9E9F /* UIView+TMLazyScrollView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "UIView+TMLazyScrollView.m"; sourceTree = "<group>"; };
+		8E344B0422488678008F9E9F /* TMLazyItemViewProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMLazyItemViewProtocol.h; sourceTree = "<group>"; };
+		8E344B0522488837008F9E9F /* LMTangramElementFactoryProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LMTangramElementFactoryProtocol.h; sourceTree = "<group>"; };
+		8E344B06224888A3008F9E9F /* LMTangramDefaultElementFactory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LMTangramDefaultElementFactory.h; sourceTree = "<group>"; };
+		8E344B07224888A3008F9E9F /* LMTangramDefaultElementFactory.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LMTangramDefaultElementFactory.m; sourceTree = "<group>"; };
+		8E344B0922488CBC008F9E9F /* TangramEasyElementProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TangramEasyElementProtocol.h; sourceTree = "<group>"; };
 		E976AAD22247B2EE0017EC79 /* TangramDefaultItemModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TangramDefaultItemModel.h; sourceTree = "<group>"; };
 		E976AAD32247B2EE0017EC79 /* TangramDefaultItemModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TangramDefaultItemModel.m; sourceTree = "<group>"; };
 		E976AAD82247D7B00017EC79 /* TMLazyScrollView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMLazyScrollView.h; sourceTree = "<group>"; };
@@ -151,6 +166,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		8E344AFD224877C8008F9E9F /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				8E344AFE224877E5008F9E9F /* TangramView.h */,
+				8E344AFF224877E5008F9E9F /* TangramView.m */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
 		E976AAD12247B2C10017EC79 /* Model */ = {
 			isa = PBXGroup;
 			children = (
@@ -160,18 +184,16 @@
 			path = Model;
 			sourceTree = "<group>";
 		};
-		E976AAD62247D7250017EC79 /* Core */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Core;
-			sourceTree = "<group>";
-		};
 		E976AAD72247D7720017EC79 /* LazyScroll */ = {
 			isa = PBXGroup;
 			children = (
+				8E344AF72248770E008F9E9F /* TMLazyReusePool.h */,
+				8E344AF82248770E008F9E9F /* TMLazyReusePool.m */,
 				E976AAD82247D7B00017EC79 /* TMLazyScrollView.h */,
 				E976AAD92247D7B00017EC79 /* TMLazyScrollView.m */,
+				8E344B0122488405008F9E9F /* UIView+TMLazyScrollView.h */,
+				8E344B0222488405008F9E9F /* UIView+TMLazyScrollView.m */,
+				8E344B0422488678008F9E9F /* TMLazyItemViewProtocol.h */,
 			);
 			path = LazyScroll;
 			sourceTree = "<group>";
@@ -213,8 +235,8 @@
 		E97703592246402A006EBCF9 /* LMTangram */ = {
 			isa = PBXGroup;
 			children = (
+				8E344AFD224877C8008F9E9F /* Core */,
 				E976AAD72247D7720017EC79 /* LazyScroll */,
-				E976AAD62247D7250017EC79 /* Core */,
 				E976AAD12247B2C10017EC79 /* Model */,
 				E97703942246850F006EBCF9 /* Layouts */,
 				E977037322466B34006EBCF9 /* EventBus */,
@@ -241,6 +263,8 @@
 				E9770361224642EC006EBCF9 /* LMTangramDefaultItemModelFactory.m */,
 				E9770391224670E2006EBCF9 /* LMTangramDefaultLayoutFactory.h */,
 				E9770392224670E2006EBCF9 /* LMTangramDefaultLayoutFactory.m */,
+				8E344B06224888A3008F9E9F /* LMTangramDefaultElementFactory.h */,
+				8E344B07224888A3008F9E9F /* LMTangramDefaultElementFactory.m */,
 			);
 			path = Factory;
 			sourceTree = "<group>";
@@ -248,10 +272,12 @@
 		E977035E224641F2006EBCF9 /* Protocols */ = {
 			isa = PBXGroup;
 			children = (
+				8E344B0922488CBC008F9E9F /* TangramEasyElementProtocol.h */,
 				E977035F2246421C006EBCF9 /* LMTangramItemModelFactoryProtocol.h */,
 				E977039022466EC5006EBCF9 /* LMTangramLayoutFactoryProtocol.h */,
 				E97703722246515C006EBCF9 /* LMTangramLayoutProtocol.h */,
 				E977038F22466BD1006EBCF9 /* LMTangramItemModelProtocol.h */,
+				8E344B0522488837008F9E9F /* LMTangramElementFactoryProtocol.h */,
 			);
 			path = Protocols;
 			sourceTree = "<group>";
@@ -421,6 +447,7 @@
 				E977038722466B52006EBCF9 /* TangramContext.m in Sources */,
 				E977037122464DD9006EBCF9 /* LMTangramDefaultDataSourceHelper.m in Sources */,
 				E977038622466B52006EBCF9 /* TangramBusIndexClass.m in Sources */,
+				8E344B00224877E5008F9E9F /* TangramView.m in Sources */,
 				E977034822463FF6006EBCF9 /* ViewController.m in Sources */,
 				E97703CA22468DFA006EBCF9 /* TangramLayoutParseHelper.m in Sources */,
 				E97703C02246853E006EBCF9 /* TangramPageScrollLayout.m in Sources */,
@@ -431,6 +458,7 @@
 				E97703BD2246853E006EBCF9 /* TangramQuintetColumnLayout.m in Sources */,
 				E977038D22466B52006EBCF9 /* TangramEventDispatcher.m in Sources */,
 				E977036D22464661006EBCF9 /* NSString+TMSafeUtils.m in Sources */,
+				8E344B08224888A3008F9E9F /* LMTangramDefaultElementFactory.m in Sources */,
 				E9770393224670E2006EBCF9 /* LMTangramDefaultLayoutFactory.m in Sources */,
 				E97703BA2246853E006EBCF9 /* TangramFixTopLayout.m in Sources */,
 				E97703C32246853E006EBCF9 /* TangramDragableLayout.m in Sources */,
@@ -454,8 +482,10 @@
 				E977035322463FF8006EBCF9 /* main.m in Sources */,
 				E977036C22464661006EBCF9 /* NSArray+TMSafeUtils.m in Sources */,
 				E97703B92246853E006EBCF9 /* TangramStickyLayout.m in Sources */,
+				8E344AF92248770E008F9E9F /* TMLazyReusePool.m in Sources */,
 				E977034522463FF6006EBCF9 /* AppDelegate.m in Sources */,
 				E976AAD42247B2EE0017EC79 /* TangramDefaultItemModel.m in Sources */,
+				8E344B0322488405008F9E9F /* UIView+TMLazyScrollView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

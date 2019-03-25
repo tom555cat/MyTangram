@@ -12,11 +12,15 @@
 #import "TangramLayoutParseHelper.h"
 #import "TMUtils.h"
 #import "TangramDefaultItemModel.h"
+#import "LMTangramElementFactoryProtocol.h"
+#import "TangramEasyElementProtocol.h"
+#import "UIView+TMLazyScrollView.h"
 
 @interface LMTangramDefaultDataSourceHelper ()
 
 @property (nonatomic, strong) Class<LMTangramLayoutFactoryProtocol> layoutFactoryClass;
 @property (nonatomic, strong) Class<LMTangramItemModelFactoryProtocol> itemModelFactoryClass;
+@property (nonatomic, strong) Class<LMTangramElementFactoryProtocol> elementFactoryClass;
 
 @end
 
@@ -36,8 +40,77 @@
     if (self = [super init]) {
         self.layoutFactoryClass = NSClassFromString(@"LMTangramDefaultLayoutFactory");
         self.itemModelFactoryClass = NSClassFromString(@"LMTangramDefaultItemModelFactory");
+        self.elementFactoryClass = NSClassFromString(@"LMTangramDefaultElementFactory");
     }
     return self;
+}
+
++(UIView *)elementByModel:(NSObject<LMTangramItemModelProtocol> *)model
+                   layout:(UIView<LMTangramLayoutProtocol> *)layout
+               tangramBus:(TangramBus *)tangramBus {
+    UIView *element = [[LMTangramDefaultDataSourceHelper sharedInstance].elementFactoryClass elementByModel:model];
+    element.reuseIdentifier = model.reuseIdentifier;
+    // 创建之后还要做这些操作
+    // 执行element实现的TangramEasyElementProtocol代理方法
+    // setTangramItemModel:方法
+    // setAtLayout:方法
+    // setTangramBus:方法
+    if ([element conformsToProtocol:@protocol(TangramEasyElementProtocol)]){
+        if (model && [element respondsToSelector:@selector(setTangramItemModel:)] && [model isKindOfClass:[TangramDefaultItemModel class]]) {
+            [((UIView<TangramEasyElementProtocol> *)element) setTangramItemModel:(TangramDefaultItemModel *)model];
+        }
+        if (layout && [element respondsToSelector:@selector(setAtLayout:)]) {
+            //if its nested itemModel, here should bind tangrambus
+            if ([model isKindOfClass:[TangramDefaultItemModel class]]
+                && [layout respondsToSelector:@selector(subLayoutDict)]
+                && [layout respondsToSelector:@selector(subLayoutIdentifiers)]
+                && model.inLayoutIdentifier.length > 0) {
+                [((UIView<TangramEasyElementProtocol> *)element) setAtLayout:[layout.subLayoutDict tm_safeObjectForKey:model.inLayoutIdentifier]];
+            }
+            else{
+                [((UIView<TangramEasyElementProtocol> *)element) setAtLayout:layout];
+            }
+        }
+        if (tangramBus && [element respondsToSelector:@selector(setTangramBus:)] ) {
+            [((UIView<TangramEasyElementProtocol> *)element) setTangramBus:tangramBus];
+        }
+    }
+    return element;
+}
+
++(UIView *)refreshElement:(UIView *)element byModel:(NSObject<LMTangramItemModelProtocol> *)model
+                   layout:(UIView<LMTangramLayoutProtocol> *)layout
+               tangramBus:(TangramBus *)tangramBus {
+    if ([model respondsToSelector:@selector(layoutIdentifierForLayoutModel)] && model.layoutIdentifierForLayoutModel && model.layoutIdentifierForLayoutModel.length > 0) {
+        return nil;
+    }
+    element = [[LMTangramDefaultDataSourceHelper sharedInstance].elementFactoryClass refreshElement:element byModel:model];
+    // 刷新之后还要做这些操作
+    // 执行element实现的TangramEasyElementProtocol代理方法
+    // setTangramItemModel:方法
+    // setAtLayout:方法
+    // setTangramBus:方法
+    if ([element conformsToProtocol:@protocol(TangramEasyElementProtocol)]){
+        if (model && [element respondsToSelector:@selector(setTangramItemModel:)] && [model isKindOfClass:[TangramDefaultItemModel class]]) {
+            [((UIView<TangramEasyElementProtocol> *)element) setTangramItemModel:(TangramDefaultItemModel *)model];
+        }
+        if (layout && [element respondsToSelector:@selector(setAtLayout:)]) {
+            //if its nested itemModel, here should bind tangrambus
+            if ([model isKindOfClass:[TangramDefaultItemModel class]]
+                && [layout respondsToSelector:@selector(subLayoutDict)]
+                && [layout respondsToSelector:@selector(subLayoutIdentifiers)]
+                && model.inLayoutIdentifier.length > 0) {
+                [((UIView<TangramEasyElementProtocol> *)element) setAtLayout:[layout.subLayoutDict tm_safeObjectForKey:model.inLayoutIdentifier]];
+            }
+            else{
+                [((UIView<TangramEasyElementProtocol> *)element) setAtLayout:layout];
+            }
+        }
+        if (tangramBus && [element respondsToSelector:@selector(setTangramBus:)] ) {
+            [((UIView<TangramEasyElementProtocol> *)element) setTangramBus:tangramBus];
+        }
+    }
+    return element;
 }
 
 +(NSArray<UIView<LMTangramLayoutProtocol> *> *)layoutsWithArray: (NSArray<NSDictionary *> *)dictArray

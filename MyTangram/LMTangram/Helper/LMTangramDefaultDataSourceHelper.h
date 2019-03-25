@@ -24,5 +24,14 @@
  */
 +(NSArray<UIView<LMTangramLayoutProtocol> *> *)layoutsWithArray: (NSArray<NSDictionary *> *)dictArray
                                                    tangramBus: (TangramBus *)tangramBus;
+// 找到一个与itemModel对应的可复用的element，刷新其中的数据。
++(UIView *)refreshElement:(UIView *)element byModel:(NSObject<LMTangramItemModelProtocol> *)model
+                   layout:(UIView<LMTangramLayoutProtocol> *)layout
+               tangramBus:(TangramBus *)tangramBus;
+
+// 创建一个element，用itemModel的数据填充它。
++(UIView *)elementByModel:(NSObject<LMTangramItemModelProtocol> *)model
+                   layout:(UIView<LMTangramLayoutProtocol> *)layout
+               tangramBus:(TangramBus *)tangramBus;
 
 @end

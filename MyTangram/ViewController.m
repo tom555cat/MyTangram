@@ -10,11 +10,14 @@
 #import "LMTangramDefaultItemModelFactory.h"
 #import "LMTangramDefaultDataSourceHelper.h"
 #import "TangramBus.h"
-#import "TangramVi"
+#import "TangramView.h"
+#import "LMTangramLayoutProtocol.h"
 
-@interface ViewController ()
+@interface ViewController () <TangramViewDatasource>
 
 @property (nonatomic, strong) NSMutableArray *layoutModelArray;
+
+@property (nonatomic, strong) NSArray *layoutArray;
 
 @property  (nonatomic, strong) TangramBus *tangramBus;
 
@@ -31,6 +34,7 @@
     // 首先要解析数据
     [self loadMockContent];
     [self registEvent];
+    [self.tangramView reloadData];
 }
 
 - (void)loadMockContent {
@@ -45,7 +49,7 @@
     [LMTangramDefaultItemModelFactory registElementType:@"image" className:@"TangramSingleImageElement"];
     [LMTangramDefaultItemModelFactory registElementType:@"text" className:@"TangramSimpleTextElement"];
     
-    self.layoutModelArray = [LMTangramDefaultDataSourceHelper layoutsWithArray:self.layoutModelArray tangramBus:self.tangramBus];
+    self.layoutArray = [LMTangramDefaultDataSourceHelper layoutsWithArray:self.layoutModelArray tangramBus:self.tangramBus];
 }
 
 - (void)registEvent {
@@ -77,6 +81,35 @@
         [self.view addSubview:_tangramView];
     }
     return _tangramView;
+}
+
+#pragma mark - TangramViewDatasource
+
+- (NSUInteger)numberOfLayoutsInTangramView:(TangramView *)view {
+    return self.layoutArray.count;
+}
+
+- (UIView<LMTangramLayoutProtocol> *)layoutInTangramView:(TangramView *)view atIndex:(NSUInteger)index {
+    return [self.layoutArray objectAtIndex:index];
+}
+
+- (NSUInteger)numberOfItemsInTangramView:(TangramView *)view forLayout:(UIView<LMTangramLayoutProtocol> *)layout {
+    return layout.itemModels.count;
+}
+
+- (NSObject<LMTangramItemModelProtocol> *)itemModelInTangramView:(TangramView *)view forLayout:(UIView<LMTangramLayoutProtocol> *)layout atIndex:(NSUInteger)index {
+    return [layout.itemModels objectAtIndex:index];
+}
+
+- (UIView *)itemInTangramView:(TangramView *)view withModel:(NSObject<LMTangramItemModelProtocol> *)model forLayout:(UIView<LMTangramLayoutProtocol> *)layout atIndex:(NSUInteger)index {
+    UIView *reuseableView = [view dequeueReusableItemWithIdentifier:model.reuseIdentifier];
+    if (reuseableView) {
+        // 找到了一个可以重用的view，刷新其中的数据
+        reuseableView = [LMTangramDefaultDataSourceHelper refreshElement:reuseableView byModel:model layout:layout tangramBus:self.tangramBus];
+    } else {
+        reuseableView = [LMTangramDefaultDataSourceHelper elementByModel:model layout:layout tangramBus:self.tangramBus];
+    }
+    return reuseableView;
 }
 
 @end
