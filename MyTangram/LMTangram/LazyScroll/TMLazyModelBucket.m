@@ -20,12 +20,18 @@
 - (instancetype)initWithBucketHeight:(CGFloat)bucketHeight
 {
     if (self = [super init]) {
+        // 难道_bucketHeight的目的就是一次性处理bucketHeight高度的itemModel吗？
         _bucketHeight = bucketHeight;
         _buckets = [NSMutableArray array];
     }
     return self;
 }
 
+
+/**
+ 将显示区域划分成每bucketHeight作为一个bucket，对应着一个set，set中存放
+ 着当前bucketHeight区域的item。
+ */
 - (void)addModel:(TMLazyItemModel *)itemModel
 {
     if (itemModel && itemModel.bottom > itemModel.top) {
@@ -87,6 +93,7 @@
     [_buckets removeAllObjects];
 }
 
+// 获取显示区范围之内的LazyItemModel
 - (NSSet<TMLazyItemModel *> *)showingModelsFrom:(CGFloat)startY to:(CGFloat)endY
 {
     NSMutableSet *result = [NSMutableSet set];
@@ -94,10 +101,12 @@
     NSInteger endIndex = (NSInteger)floor((endY - 0.01) / _bucketHeight);
     for (NSInteger index = 0; index <= endIndex; index++) {
         if (_buckets.count > index && index >= startIndex && index <= endIndex) {
+            // 将所有显示区域的bucket对应的set中的itemModel并在一个集合result中。
             NSSet *bucket = [_buckets objectAtIndex:index];
             [result unionSet:bucket];
         }
     }
+    // 从result中过滤出在显示区之外的itemModel
     NSMutableSet *needToBeRemoved = [NSMutableSet set];
     for (TMLazyItemModel *itemModel in result) {
         if (itemModel.top >= endY || itemModel.bottom <= startY) {

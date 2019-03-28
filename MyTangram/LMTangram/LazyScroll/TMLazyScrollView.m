@@ -29,6 +29,16 @@
     // Will be used for dequeueReusableItem methods.
     NSString *_currentReloadingMuiID;
     
+    // 从名字上看，就是在可是范围内的MuiIDs。
+    NSMutableSet<NSString *> *_inScreenVisibleMuiIDs;
+    
+    // Store muiID of items which are visible last time.
+    // 应该是reloadData之前上次的屏幕可是范围内的MuiIDs的集合。
+    NSSet<NSString *> *_lastInScreenVisibleMuiIDs;
+    
+    // Store muiID of items which should be visible.
+    // 这个reloadData中在新的可视范围内的model的MuiID的set
+    NSMutableSet<NSString *> *_newVisibleMuiIDs;
 }
 
 @end
@@ -50,7 +60,10 @@
         
         _visibleItems = [[NSMutableSet alloc] init];
         
+        // 初始化的时候传递了一个(LazyBucketHeight 400)的参数，这个参数起到了什么作用？
         _modelBucket = [[TMLazyModelBucket alloc] initWithBucketHeight:LazyBucketHeight];
+        
+        _inScreenVisibleMuiIDs = [NSMutableSet set];
     }
     return self;
 }
@@ -157,8 +170,11 @@
     // Calculate which item views should be shown.
     // Calculating will cost some time, so here is a buffer for reducing
     // times of calculating.
+    // 获取显示范围之内的LazyItemModel(包含着frame信息)的数组
     NSSet<TMLazyItemModel *> *newVisibleModels = [_modelBucket showingModelsFrom:minY - LazyBufferHeight
                                                                               to:maxY + LazyBufferHeight];
+    
+    // 获取这些lazyItemModel对应的muiID
     NSSet<NSString *> *newVisibleMuiIDs = [newVisibleModels valueForKey:@"muiID"];
     
     // Find if item views are in visible area.
@@ -166,8 +182,11 @@
     [self recycleItems:isReload newVisibleMuiIDs:newVisibleMuiIDs];
     
     // Calculate the inScreenVisibleModels.
+    // 将在屏item保存进离屏item set中
     _lastInScreenVisibleMuiIDs = [_inScreenVisibleMuiIDs copy];
+    // 将在屏item清空
     [_inScreenVisibleMuiIDs removeAllObjects];
+    // 重新填充在屏item MuiID
     for (TMLazyItemModel *itemModel in newVisibleModels) {
         if (itemModel.top < maxY && itemModel.bottom > minY) {
             [_inScreenVisibleMuiIDs addObject:itemModel.muiID];
@@ -175,11 +194,116 @@
     }
     
     // Generate or reload visible item views.
+    // cancelPreviousPerformRequestWithTarget:selector:object:是与performSelector:withObject:afterDelay:
+    // 相对应的方法，是取消之前的方法。说明有地方使用了performSelector:withObject:afterDelay:方法。
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(generateItems:) object:@(NO)];
     _newVisibleMuiIDs = [newVisibleMuiIDs mutableCopy];
+    // 在执行generateItems:之前，先调用cancelPreviousPerformRequestsWithTarget:进行取消。
     [self generateItems:isReload];
 }
 
+- (void)generateItems:(BOOL)isReload
+{
+    if (_newVisibleMuiIDs == nil || _newVisibleMuiIDs.count == 0) {
+        return;
+    }
+    
+    NSString *muiID = [_newVisibleMuiIDs anyObject];
+    BOOL hasLoadAnItem = NO;
+    
+    // 1. Item view is not visible. We should create or reuse an item view.
+    // 2. Item view need to be reloaded.
+    BOOL isVisible = [self isMuiIdVisible:muiID];
+    BOOL needReload = [_needReloadingMuiIDs containsObject:muiID];
+    if (isVisible == NO || needReload == YES) {
+        if (self.dataSource) {
+            hasLoadAnItem = YES;
+            
+            // If you call dequeue method in your dataSource, the currentReloadingMuiID
+            // will be used for searching the best-matched reusable view.
+            if (isVisible == YES) {
+                _currentReloadingMuiID = muiID;
+            }
+            UIView *itemView = [self.dataSource scrollView:self itemByMuiID:muiID];
+            _currentReloadingMuiID = nil;
+            
+            if (itemView) {
+                // Call afterGetView.
+                if ([itemView respondsToSelector:@selector(mui_afterGetView)]) {
+                    [(UIView<TMLazyItemViewProtocol> *)itemView mui_afterGetView];
+                }
+                // Show the item view.
+                itemView.muiID = muiID;
+                itemView.hidden = NO;
+                if (self.autoAddSubview) {
+                    if (itemView.superview != self) {
+                        [self addSubview:itemView];
+                    }
+                }
+                // Add item view to visibleItems.
+                if (isVisible == NO) {
+                    [_visibleItems addObject:itemView];
+                }
+            }
+            
+            [_needReloadingMuiIDs removeObject:muiID];
+        }
+    }
+    
+    // Call didEnterWithTimes.
+    // didEnterWithTimes will only be called when item view enter the in screen
+    // visible area, so we have to write the logic at here.
+    if ([_lastInScreenVisibleMuiIDs containsObject:muiID] == NO
+        && [_inScreenVisibleMuiIDs containsObject:muiID] == YES) {
+        for (UIView *itemView in _visibleItems) {
+            if ([itemView.muiID isEqualToString:muiID]) {
+                if ([itemView respondsToSelector:@selector(mui_didEnterWithTimes:)]) {
+                    NSInteger times = [_enterTimesDict tm_integerForKey:itemView.muiID];
+                    times++;
+                    [_enterTimesDict tm_safeSetObject:@(times) forKey:itemView.muiID];
+                    [(UIView<TMLazyItemViewProtocol> *)itemView mui_didEnterWithTimes:times];
+                }
+                break;
+            }
+        }
+    }
+    
+    [_newVisibleMuiIDs removeObject:muiID];
+    if (_newVisibleMuiIDs.count > 0) {
+        if (isReload == YES || self.loadAllItemsImmediately == YES || hasLoadAnItem == NO) {
+            [self generateItems:isReload];
+        } else {
+            [self performSelector:@selector(generateItems:)
+                       withObject:@(isReload)
+                       afterDelay:0.0000001
+                          inModes:@[NSRunLoopCommonModes]];
+        }
+    }
+}
+
+
+- (void)recycleItems:(BOOL)isReload newVisibleMuiIDs:(NSSet<NSString *> *)newVisibleMuiIDs
+{
+    NSSet *visibleItemsCopy = [_visibleItems copy];
+    for (UIView *itemView in visibleItemsCopy) {
+        BOOL isToShow  = [newVisibleMuiIDs containsObject:itemView.muiID];
+        if (!isToShow) {
+            // Call didLeave.
+            if ([itemView respondsToSelector:@selector(mui_didLeave)]){
+                [(UIView<TMLazyItemViewProtocol> *)itemView mui_didLeave];
+            }
+            if (itemView.reuseIdentifier.length > 0) {
+                itemView.hidden = YES;
+                [self.reusePool addItemView:itemView forReuseIdentifier:itemView.reuseIdentifier];
+                [_visibleItems removeObject:itemView];
+            } else if(isReload && itemView.muiID) {
+                [_needReloadingMuiIDs addObject:itemView.muiID];
+            }
+        } else if (isReload && itemView.muiID) {
+            [_needReloadingMuiIDs addObject:itemView.muiID];
+        }
+    }
+}
 
 #pragma mark - getter & setter
 
