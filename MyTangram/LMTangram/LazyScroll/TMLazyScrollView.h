@@ -10,6 +10,7 @@
 #import "TMLazyReusePool.h"
 
 @class TMLazyScrollView;
+@class TMLazyItemModel;
 
 @protocol TMLazyScrollViewDataSource <NSObject>
 

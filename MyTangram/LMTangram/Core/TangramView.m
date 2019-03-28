@@ -13,14 +13,41 @@
 #import "TangramStickyLayout.h"
 #import "TangramDragableLayout.h"
 #import "TangramFixLayout.h"
+#import "TMLazyItemModel.h"
 
 @interface TangramView ()
 
 @property (nonatomic, weak, setter=setDataSource:) id<TangramViewDatasource>       clDataSource;
 
+// Store start number(flat index) of First element in every Layout
+// key：layoutKey；value：start number(flat index) for first element in the layout
+// 将所有的Layout中的itemModel信息拍扁(flat)，看做为同一层级，统一编号。
+// layoutStartNumberIndex的key为layout的index，value为layout中第一个itemModel的编号。
+// layout1 : 3个item
+// layout2 : 2个item
+// 上述这种情况，layoutStartNumberIndex的内容为:
+// {1:0, 2:3}
+@property   (nonatomic, strong) NSMutableDictionary     *layoutStartNumberIndex;
+
+// item and Layout index dictionary。key ：item unique scrollIndex；value：layout
+// 由flat之后的itemModel索引到layout索引的字典，反向索引
+// layout1 : 3个item
+// layout2 : 2个item
+// 上述这种情况，itemLayoutIndex的内容为
+// {0:1, 1:1, 2:1, 3:2, 4:2}
+@property   (nonatomic, strong) NSMutableDictionary     *itemLayoutIndex;
+
 // Element Count in every layout. key ：layoutKey；value ：element count in a layout(NSNumber)
 // 每个layout中有多少个items，key为layoutIndex，value为itemCount的数目
 @property   (nonatomic, strong) NSMutableDictionary     *numberOfItemsInlayout;
+
+// The Dictionary of MUI ID（unique ID，String）and flat index。Key：MUI ID；value：flat index
+// key是MUI ID，是每一个item的唯一ID，value为flat之后的item的index
+@property   (nonatomic, strong) NSMutableDictionary     *muiIDIndexIndex;
+
+// The Dictionary of MUI ID（unique ID，String) and Model。Key：MUI ID；value：Model
+// key是MUI ID，value是itemModel
+@property   (nonatomic, strong) NSMutableDictionary     *muiIDModelIndex;
 
 // Contains layouts in TangramView. Key ：layout index；value：layout
 //
@@ -29,6 +56,8 @@
 // Layout Key List
 // 据说是layout的key构成的数组
 @property   (nonatomic, strong) NSMutableArray          *layoutKeyArray;
+
+
 
 //#####三种类型的layout保存在这几个数组里#####
 // FixLayout Array
@@ -131,7 +160,12 @@
             }
             [layout setItemModels:[NSArray arrayWithArray:modelArray]];
         }
-
+        
+        // // 这个方法，就是更加itemModel的内部宽高从而计算每个layout的宽和高，从而累加得到TangramView的contentSize的宽和高
+        // 计算布局的过程中，将每个item的frame信息也计算了出来，保存进了itemModel的itemFrame中。
+        // This property is used for layout to change the frame of itemModel.
+        // @property (nonatomic, assign) CGRect itemFrame;
+        
         [self layoutContentWithCalculateLayout:YES];
     }
     [super reloadData];
@@ -379,6 +413,38 @@
 
 #pragma mark - getter & setter
 
+- (NSMutableDictionary *)muiIDModelIndex
+{
+    if (nil == _muiIDModelIndex) {
+        _muiIDModelIndex = [[NSMutableDictionary alloc] init];
+    }
+    return _muiIDModelIndex;
+}
+
+- (NSMutableDictionary *)muiIDIndexIndex
+{
+    if (nil == _muiIDIndexIndex) {
+        _muiIDIndexIndex = [[NSMutableDictionary alloc] init];
+    }
+    return _muiIDIndexIndex;
+}
+
+- (NSMutableDictionary *)itemLayoutIndex
+{
+    if (nil == _itemLayoutIndex) {
+        _itemLayoutIndex = [[NSMutableDictionary alloc] init];
+    }
+    return _itemLayoutIndex;
+}
+
+- (NSMutableDictionary *)layoutStartNumberIndex
+{
+    if (nil == _layoutStartNumberIndex) {
+        _layoutStartNumberIndex = [[NSMutableDictionary alloc] init];
+    }
+    return _layoutStartNumberIndex;
+}
+
 - (NSMutableArray *)layoutKeyArray
 {
     if (nil == _layoutKeyArray) {
@@ -418,9 +484,82 @@
 }
 
 #pragma mark - DataSource 3个方法
-// - (NSUInteger)numberOfItemsInScrollView:(TMLazyScrollView *)scrollView
+- (NSUInteger)numberOfItemsInScrollView:(TMLazyScrollView *)scrollView {
+    NSUInteger number = 0;
+    if (self.layoutKeyArray && 0 < self.layoutKeyArray.count) {
+        NSUInteger numberOfLayouts = self.layoutKeyArray.count;
+        for (int i=0; i< numberOfLayouts; i++) {
+            NSString *layoutKey = [self.layoutKeyArray tm_stringAtIndex:i];
+            NSUInteger numberOfItemsInLayout = [self.numberOfItemsInlayout tm_integerForKey:layoutKey];
+            // Save flat Index for first element in layout
+            // 设置layout的首个item的index，该index是flat之后的index
+            [self.layoutStartNumberIndex tm_safeSetObject:@(number) forKey:layoutKey];
+            // Save the layout reference to flat index
+            for (int i=0; i<numberOfItemsInLayout; i++) {
+                // 设置每个item的index的layout的index，item的index是flat之后的index
+                [self.itemLayoutIndex tm_safeSetObject:layoutKey forKey:[NSString stringWithFormat:@"%ld", (long)(number + i)]];
+            }
+            number += numberOfItemsInLayout;
+        }
+    }
+    return number;
+}
 
-// - (TMLazyItemModel *)scrollView:(TMLazyScrollView *)scrollView itemModelAtIndex:(NSUInteger)index
+// 这里的index是拍扁之后的item的index
+- (TMLazyItemModel *)scrollView:(TMLazyScrollView *)scrollView itemModelAtIndex:(NSUInteger)index {
+    TMLazyItemModel *rectModel = nil;
+    NSString *scrollIndex = [NSString stringWithFormat:@"%ld", (long)index];
+    // 找到该item对应的layout index
+    NSString *layoutKey = [self.itemLayoutIndex tm_safeObjectForKey:scrollIndex];
+    // 根据layout index找到layout
+    UIView<LMTangramLayoutProtocol> *layout = [self.layoutDict tm_safeObjectForKey:layoutKey];
+    if (layout) {
+        // 找到layout的第一个item的index(拍扁之后)
+        NSUInteger layoutStartNumber = [[self.layoutStartNumberIndex tm_safeObjectForKey:layoutKey] unsignedIntegerValue];
+        // 获取item在layout中的相对index，从0开始，以便于从layout.itemModels中获取itemModel
+        NSUInteger itemModelNumber = index - layoutStartNumber;
+        NSObject<LMTangramItemModelProtocol> *model = [layout.itemModels tm_safeObjectAtIndex:itemModelNumber];
+        if (model) {
+            // layout.identifier来源于JSON中的card的id字段
+            NSString *layoutIdentifier = layout.identifier;
+            if ([model respondsToSelector:@selector(innerItemModel)] && model.innerItemModel && model.inLayoutIdentifier && model.inLayoutIdentifier.length > 0
+                && [layout respondsToSelector:@selector(subLayoutIdentifiers)] &&
+                [layout.subLayoutIdentifiers containsObject:model.inLayoutIdentifier]) {
+                UIView<LMTangramLayoutProtocol> *subLayout = [layout.subLayoutDict tm_safeObjectForKey:model.inLayoutIdentifier];
+                layoutIdentifier = subLayout.identifier;
+            }
+            NSString *muiID = [NSString stringWithFormat:@"%@_%@_%@_%@_%ld",
+                               layout.layoutType, model.itemType, model.reuseIdentifier,layoutIdentifier,(long)index];
+            [self.muiIDIndexIndex tm_safeSetObject:scrollIndex forKey:muiID];
+            [self.muiIDModelIndex tm_safeSetObject:model forKey:muiID];
+            if ([model isKindOfClass:[TMLazyItemModel class]]) {
+                rectModel = (TMLazyItemModel *)model;
+            }
+            else{
+                rectModel = [[TMLazyItemModel alloc] init];
+            }
+            rectModel.muiID = muiID;
+            CGFloat absTop  = CGRectGetMinY(model.itemFrame) + CGRectGetMinY(layout.frame);
+            CGFloat absLeft = CGRectGetMinX(model.itemFrame) + CGRectGetMinX(layout.frame);
+            //如果是layout内部的subLayout，需要特殊处理
+            if ([model respondsToSelector:@selector(innerItemModel)] && model.innerItemModel && model.inLayoutIdentifier && model.inLayoutIdentifier.length > 0
+                && [layout respondsToSelector:@selector(subLayoutIdentifiers)] &&
+                [layout.subLayoutIdentifiers containsObject:model.inLayoutIdentifier]) {
+                UIView<LMTangramLayoutProtocol> *subLayout = [layout.subLayoutDict tm_safeObjectForKey:model.inLayoutIdentifier];
+                absTop += subLayout.vv_top;
+                absLeft += subLayout.vv_left;
+            }
+            rectModel.absRect = CGRectMake(absLeft, absTop, CGRectGetWidth(model.itemFrame), CGRectGetHeight(model.itemFrame));
+            if ([model respondsToSelector:@selector(setAbsRect:)]) {
+                model.absRect = rectModel.absRect;
+            }
+            if ([model respondsToSelector:@selector(setMuiID:)]) {
+                model.muiID = muiID;
+            }
+        }
+    }
+    return rectModel;
+}
 
 // - (UIView *)scrollView:(TMLazyScrollView *)scrollView itemByMuiID:(NSString *)muiID
 

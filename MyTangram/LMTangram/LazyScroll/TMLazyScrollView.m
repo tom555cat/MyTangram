@@ -9,12 +9,20 @@
 #import "TMLazyScrollView.h"
 #import "UIView+TMLazyScrollView.h"
 #import "TMLazyItemViewProtocol.h"
+#import "TMLazyModelBucket.h"
+#import "TMLazyItemModel.h"
+
+#define LazyBufferHeight 20
+#define LazyBucketHeight 400
 
 @interface TMLazyScrollView () {
     NSMutableSet<UIView *> *_visibleItems;
     
     // Store item models.
+    // _modelBucket中保存的是itemModel对应的TMLazyItemModel，其中
+    // 保存了itemModel的frame信息
     TMLazyModelBucket *_modelBucket;
+    // 所有的layout的item的总数
     NSInteger _itemCount;
     
     // Record current muiID of reloading item.
@@ -42,7 +50,7 @@
         
         _visibleItems = [[NSMutableSet alloc] init];
         
-        
+        _modelBucket = [[TMLazyModelBucket alloc] initWithBucketHeight:LazyBucketHeight];
     }
     return self;
 }
@@ -99,6 +107,7 @@
 
 - (void)reloadData
 {
+    // 重新记录itemModel对应的frame信息model信息
     [self storeItemModelsFromIndex:0];
     [self assembleSubviews:YES];
 }
@@ -112,13 +121,63 @@
     if (self.dataSource) {
         _itemCount = [self.dataSource numberOfItemsInScrollView:self];
         for (NSInteger index = startIndex; index < _itemCount; index++) {
+            // TMLazyItemModel类型的itemModel就是记录了每个itemModel的frame信息
             TMLazyItemModel *itemModel = [self.dataSource scrollView:self itemModelAtIndex:index];
             if (itemModel.muiID.length == 0) {
                 itemModel.muiID = [NSString stringWithFormat:@"%zd", index];
             }
+            //
             [_modelBucket addModel:itemModel];
         }
     }
+}
+
+- (void)assembleSubviews:(BOOL)isReload
+{
+    if (self.outerScrollView) {
+        CGRect frame = [self.superview convertRect:self.frame toView:self.outerScrollView];
+        CGRect visibleArea = CGRectIntersection(self.outerScrollView.bounds, frame);
+        if (visibleArea.size.height > 0) {
+            CGFloat offsetY = CGRectGetMinY(frame);
+            CGFloat minY = CGRectGetMinY(visibleArea) - offsetY;
+            CGFloat maxY = CGRectGetMaxY(visibleArea) - offsetY;
+            [self assembleSubviews:isReload minY:minY maxY:maxY];
+        } else {
+            [self assembleSubviews:isReload minY:0 maxY:-LazyBufferHeight * 2];
+        }
+    } else {
+        CGFloat minY = CGRectGetMinY(self.bounds);
+        CGFloat maxY = CGRectGetMaxY(self.bounds);
+        [self assembleSubviews:isReload minY:minY maxY:maxY];
+    }
+}
+
+- (void)assembleSubviews:(BOOL)isReload minY:(CGFloat)minY maxY:(CGFloat)maxY
+{
+    // Calculate which item views should be shown.
+    // Calculating will cost some time, so here is a buffer for reducing
+    // times of calculating.
+    NSSet<TMLazyItemModel *> *newVisibleModels = [_modelBucket showingModelsFrom:minY - LazyBufferHeight
+                                                                              to:maxY + LazyBufferHeight];
+    NSSet<NSString *> *newVisibleMuiIDs = [newVisibleModels valueForKey:@"muiID"];
+    
+    // Find if item views are in visible area.
+    // Recycle invisible item views.
+    [self recycleItems:isReload newVisibleMuiIDs:newVisibleMuiIDs];
+    
+    // Calculate the inScreenVisibleModels.
+    _lastInScreenVisibleMuiIDs = [_inScreenVisibleMuiIDs copy];
+    [_inScreenVisibleMuiIDs removeAllObjects];
+    for (TMLazyItemModel *itemModel in newVisibleModels) {
+        if (itemModel.top < maxY && itemModel.bottom > minY) {
+            [_inScreenVisibleMuiIDs addObject:itemModel.muiID];
+        }
+    }
+    
+    // Generate or reload visible item views.
+    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(generateItems:) object:@(NO)];
+    _newVisibleMuiIDs = [newVisibleMuiIDs mutableCopy];
+    [self generateItems:isReload];
 }
 
 

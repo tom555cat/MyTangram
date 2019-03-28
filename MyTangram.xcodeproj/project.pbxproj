@@ -11,6 +11,8 @@
 		8E344B00224877E5008F9E9F /* TangramView.m in Sources */ = {isa = PBXBuildFile; fileRef = 8E344AFF224877E5008F9E9F /* TangramView.m */; };
 		8E344B0322488405008F9E9F /* UIView+TMLazyScrollView.m in Sources */ = {isa = PBXBuildFile; fileRef = 8E344B0222488405008F9E9F /* UIView+TMLazyScrollView.m */; };
 		8E344B08224888A3008F9E9F /* LMTangramDefaultElementFactory.m in Sources */ = {isa = PBXBuildFile; fileRef = 8E344B07224888A3008F9E9F /* LMTangramDefaultElementFactory.m */; };
+		8EEF38F0224B0B170092A2D8 /* TMLazyModelBucket.m in Sources */ = {isa = PBXBuildFile; fileRef = 8EEF38EE224B0B170092A2D8 /* TMLazyModelBucket.m */; };
+		8EEF38F4224B12960092A2D8 /* TMLazyItemModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 8EEF38F1224B12960092A2D8 /* TMLazyItemModel.m */; };
 		E976AAD42247B2EE0017EC79 /* TangramDefaultItemModel.m in Sources */ = {isa = PBXBuildFile; fileRef = E976AAD32247B2EE0017EC79 /* TangramDefaultItemModel.m */; };
 		E976AADA2247D7B00017EC79 /* TMLazyScrollView.m in Sources */ = {isa = PBXBuildFile; fileRef = E976AAD92247D7B00017EC79 /* TMLazyScrollView.m */; };
 		E977034522463FF6006EBCF9 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = E977034422463FF6006EBCF9 /* AppDelegate.m */; };
@@ -110,6 +112,10 @@
 		8E344B06224888A3008F9E9F /* LMTangramDefaultElementFactory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LMTangramDefaultElementFactory.h; sourceTree = "<group>"; };
 		8E344B07224888A3008F9E9F /* LMTangramDefaultElementFactory.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LMTangramDefaultElementFactory.m; sourceTree = "<group>"; };
 		8E344B0922488CBC008F9E9F /* TangramEasyElementProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TangramEasyElementProtocol.h; sourceTree = "<group>"; };
+		8EEF38EE224B0B170092A2D8 /* TMLazyModelBucket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TMLazyModelBucket.m; sourceTree = "<group>"; };
+		8EEF38EF224B0B170092A2D8 /* TMLazyModelBucket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TMLazyModelBucket.h; sourceTree = "<group>"; };
+		8EEF38F1224B12960092A2D8 /* TMLazyItemModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TMLazyItemModel.m; sourceTree = "<group>"; };
+		8EEF38F2224B12960092A2D8 /* TMLazyItemModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TMLazyItemModel.h; sourceTree = "<group>"; };
 		E976AAD22247B2EE0017EC79 /* TangramDefaultItemModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TangramDefaultItemModel.h; sourceTree = "<group>"; };
 		E976AAD32247B2EE0017EC79 /* TangramDefaultItemModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TangramDefaultItemModel.m; sourceTree = "<group>"; };
 		E976AAD82247D7B00017EC79 /* TMLazyScrollView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TMLazyScrollView.h; sourceTree = "<group>"; };
@@ -317,6 +323,10 @@
 		E976AAD72247D7720017EC79 /* LazyScroll */ = {
 			isa = PBXGroup;
 			children = (
+				8EEF38F2224B12960092A2D8 /* TMLazyItemModel.h */,
+				8EEF38F1224B12960092A2D8 /* TMLazyItemModel.m */,
+				8EEF38EF224B0B170092A2D8 /* TMLazyModelBucket.h */,
+				8EEF38EE224B0B170092A2D8 /* TMLazyModelBucket.m */,
 				8E344AF72248770E008F9E9F /* TMLazyReusePool.h */,
 				8E344AF82248770E008F9E9F /* TMLazyReusePool.m */,
 				E976AAD82247D7B00017EC79 /* TMLazyScrollView.h */,
@@ -693,6 +703,7 @@
 				8E344B08224888A3008F9E9F /* LMTangramDefaultElementFactory.m in Sources */,
 				E9C14B312249210400736722 /* VVRatioLayout.m in Sources */,
 				E9C14B3B2249210400736722 /* NVRatioLayout.m in Sources */,
+				8EEF38F4224B12960092A2D8 /* TMLazyItemModel.m in Sources */,
 				E9C14B382249210400736722 /* VVLayout.m in Sources */,
 				E9C14B352249210400736722 /* VVVH2Layout.m in Sources */,
 				E9770393224670E2006EBCF9 /* LMTangramDefaultLayoutFactory.m in Sources */,
@@ -703,6 +714,7 @@
 				E9C14B432249210400736722 /* NSObject+VVObserver.m in Sources */,
 				E97703BA2246853E006EBCF9 /* TangramFixTopLayout.m in Sources */,
 				E9C14B492249210400736722 /* VVFrameLayout.m in Sources */,
+				8EEF38F0224B0B170092A2D8 /* TMLazyModelBucket.m in Sources */,
 				E97703C32246853E006EBCF9 /* TangramDragableLayout.m in Sources */,
 				E97703C52246853E006EBCF9 /* TangramFixLayout.m in Sources */,
 				E9C14B572249210400736722 /* VVPageView.m in Sources */,
