@@ -561,6 +561,77 @@
     return rectModel;
 }
 
-// - (UIView *)scrollView:(TMLazyScrollView *)scrollView itemByMuiID:(NSString *)muiID
+- (UIView *)scrollView:(TMLazyScrollView *)scrollView itemByMuiID:(NSString *)muiID {
+    // 可以从muiID中获取view，
+    UIView *item = nil;
+    if (self.clDataSource
+        && [self.clDataSource conformsToProtocol:@protocol(TangramViewDatasource)]
+        && [self.clDataSource respondsToSelector:@selector(itemInTangramView:withModel:forLayout:atIndex:)]) {
+        // 从muiID获取对应的ItemModel
+        NSObject<LMTangramItemModelProtocol> *model = [self.muiIDModelIndex tm_safeObjectForKey:muiID];
+        // 从muiID获取对应的flat之后的item的index
+        NSString *scrollIndex = [self.muiIDIndexIndex tm_safeObjectForKey:muiID];
+        // 从flat之后的item的index获取layout的index
+        NSString *layoutKey = [self.itemLayoutIndex tm_safeObjectForKey:scrollIndex];
+        // 从layout index获取layout
+        UIView<LMTangramLayoutProtocol> *layout = [self.layoutDict tm_safeObjectForKey:layoutKey];
+        // 找到layout的第一个flat之后的itemModel的index
+        NSString *layoutStartIndex = [self.layoutStartNumberIndex tm_stringForKey:layoutKey];
+        // 获取layout的itemModel的绝对index
+        NSUInteger indexInLayout = [scrollIndex integerValue] - [layoutStartIndex integerValue];
+        if (layout && model) {
+            // 通过ViewController实现的方法，获取到element
+            item = [self.clDataSource itemInTangramView:self withModel:model forLayout:layout atIndex:indexInLayout];
+        }
+        //判断一下是不是subLayout中的item，如果是，则添加到subLayout中
+        if ([model respondsToSelector:@selector(innerItemModel)] && model.innerItemModel
+            && [model respondsToSelector:@selector(inLayoutIdentifier)]
+            && model.inLayoutIdentifier && model.inLayoutIdentifier.length > 0
+            && [layout respondsToSelector:@selector(subLayoutIdentifiers)] &&
+            [layout.subLayoutIdentifiers containsObject:model.inLayoutIdentifier]) {
+            UIView<LMTangramLayoutProtocol> *subLayout = [layout.subLayoutDict tm_safeObjectForKey:model.inLayoutIdentifier];
+            if([subLayout respondsToSelector:@selector(headerItemModel)] && subLayout.headerItemModel == model
+               && [layout respondsToSelector:@selector(addHeaderView:)])
+            {
+                [subLayout addHeaderView:item];
+            }
+            else if([subLayout respondsToSelector:@selector(footerItemModel)] && subLayout.footerItemModel == model
+                    && [subLayout respondsToSelector:@selector(addFooterView:)])
+            {
+                [subLayout addFooterView:item];
+            }
+            else{
+                [subLayout addSubview:item];
+            }
+        }
+        else if([layout respondsToSelector:@selector(headerItemModel)] && layout.headerItemModel == model
+                && [layout respondsToSelector:@selector(addHeaderView:)])
+        {
+            [layout addHeaderView:item];
+        }
+        else if([layout respondsToSelector:@selector(footerItemModel)] && layout.footerItemModel == model
+                && [layout respondsToSelector:@selector(addFooterView:)])
+        {
+            [layout addFooterView:item];
+        }
+        else if (![layout.subviews containsObject:item]) {
+            //[item removeFromSuperview];
+            if ([layout respondsToSelector:@selector(addSubView:withModel:)]) {
+                //**** 将element加入进layout中 ****
+                [layout addSubView:item withModel:model];
+            }
+            else{
+                [layout addSubview:item];
+            }
+        }
+        //强制让fix/dragable/sticky布局里面的组件 不做复用处理
+        if ([layout isKindOfClass:[TangramFixLayout class]] || [layout isKindOfClass:[TangramDragableLayout class]] || [layout isKindOfClass:[TangramStickyLayout class]]) {
+            item.reuseIdentifier = @"";
+        }
+        // 修改item的布局
+        item.frame = model.itemFrame;
+    }
+    return item;
+}
 
 @end

@@ -16,6 +16,8 @@
 #define LazyBucketHeight 400
 
 @interface TMLazyScrollView () {
+    
+    // 这里边存放的是真正的element视图
     NSMutableSet<UIView *> *_visibleItems;
     
     // Store item models.
@@ -27,6 +29,7 @@
     
     // Record current muiID of reloading item.
     // Will be used for dequeueReusableItem methods.
+    // 当前需要刷新的muiID。
     NSString *_currentReloadingMuiID;
     
     // 从名字上看，就是在可是范围内的MuiIDs。
@@ -39,6 +42,14 @@
     // Store muiID of items which should be visible.
     // 这个reloadData中在新的可视范围内的model的MuiID的set
     NSMutableSet<NSString *> *_newVisibleMuiIDs;
+    
+    // Store muiID of items which need to be reloaded.
+    // 存储需要重载内容的item对应的muiID
+    NSMutableSet<NSString *> *_needReloadingMuiIDs;
+    
+    // Store the enter screen times of items.
+    // 记录MuiID对应的出现次数
+    NSMutableDictionary<NSString *, NSNumber *> *_enterTimesDict;
 }
 
 @end
@@ -60,10 +71,16 @@
         
         _visibleItems = [[NSMutableSet alloc] init];
         
+        _loadAllItemsImmediately = YES;
+        
         // 初始化的时候传递了一个(LazyBucketHeight 400)的参数，这个参数起到了什么作用？
         _modelBucket = [[TMLazyModelBucket alloc] initWithBucketHeight:LazyBucketHeight];
         
         _inScreenVisibleMuiIDs = [NSMutableSet set];
+        
+        _needReloadingMuiIDs = [[NSMutableSet alloc] init];
+        
+        _enterTimesDict = [[NSMutableDictionary alloc] init];
     }
     return self;
 }
@@ -174,7 +191,7 @@
     NSSet<TMLazyItemModel *> *newVisibleModels = [_modelBucket showingModelsFrom:minY - LazyBufferHeight
                                                                               to:maxY + LazyBufferHeight];
     
-    // 获取这些lazyItemModel对应的muiID
+    // 获取显示范围之内的这些lazyItemModel对应的muiID
     NSSet<NSString *> *newVisibleMuiIDs = [newVisibleModels valueForKey:@"muiID"];
     
     // Find if item views are in visible area.
@@ -208,20 +225,24 @@
         return;
     }
     
+    // 从_newVisibleMuiIDs中获取muiID
     NSString *muiID = [_newVisibleMuiIDs anyObject];
     BOOL hasLoadAnItem = NO;
     
     // 1. Item view is not visible. We should create or reuse an item view.
     // 2. Item view need to be reloaded.
+    //
     BOOL isVisible = [self isMuiIdVisible:muiID];
     BOOL needReload = [_needReloadingMuiIDs containsObject:muiID];
     if (isVisible == NO || needReload == YES) {
+        // 如果muiID不可以见，或者是需要刷新
         if (self.dataSource) {
             hasLoadAnItem = YES;
             
             // If you call dequeue method in your dataSource, the currentReloadingMuiID
             // will be used for searching the best-matched reusable view.
             if (isVisible == YES) {
+                // 如果当前view可见，则需要尽心刷新
                 _currentReloadingMuiID = muiID;
             }
             UIView *itemView = [self.dataSource scrollView:self itemByMuiID:muiID];
@@ -229,6 +250,8 @@
             
             if (itemView) {
                 // Call afterGetView.
+                
+                // 调用AOP函数
                 if ([itemView respondsToSelector:@selector(mui_afterGetView)]) {
                     [(UIView<TMLazyItemViewProtocol> *)itemView mui_afterGetView];
                 }
@@ -269,7 +292,9 @@
     }
     
     [_newVisibleMuiIDs removeObject:muiID];
+    // 处理完当前屏幕可视范围内的_newVisibleMuiIDs中的一个muiID，还有其他的muiID，则继续处理
     if (_newVisibleMuiIDs.count > 0) {
+        // loadAllItemsImmediately是立即加载m，默认值是yes，则会同步加载剩余的element
         if (isReload == YES || self.loadAllItemsImmediately == YES || hasLoadAnItem == NO) {
             [self generateItems:isReload];
         } else {
@@ -305,7 +330,30 @@
     }
 }
 
+#pragma mark - Private
+
+- (BOOL)isMuiIdVisible:(NSString *)muiID
+{
+    for (UIView *itemView in _visibleItems) {
+        if ([itemView.muiID isEqualToString:muiID]) {
+            return YES;
+        }
+    }
+    return NO;
+}
+
 #pragma mark - getter & setter
+
+- (NSSet<UIView *> *)inScreenVisibleItems
+{
+    NSMutableSet<UIView *> * inScreenVisibleItems = [NSMutableSet set];
+    for (UIView *view in _visibleItems) {
+        if ([_inScreenVisibleMuiIDs containsObject:view.muiID]) {
+            [inScreenVisibleItems addObject:view];
+        }
+    }
+    return [inScreenVisibleItems copy];
+}
 
 - (NSSet<UIView *> *)visibleItems
 {

@@ -64,6 +64,13 @@
 
 - (UIView *)dequeueReusableItemWithIdentifier:(NSString *)identifier;
 
+/**
+ Item views which is in the screen visible area.
+ It is a sub set of "visibleItems".
+ */
+// 在屏的
+@property (nonatomic, strong, readonly, nonnull) NSSet<UIView *> *inScreenVisibleItems;
+
 
 /**
  Hide all visible items and recycle reusable item views.
@@ -75,5 +82,22 @@
 - (void)clearVisibleItems:(BOOL)enableRecycle;
 
 - (void)reloadData;
+
+/**
+ If it is YES, LazyScrollView will add created item view into
+ its subviews automatically.
+ Default value is NO.
+ Please only set this value before you reload data for the first time.
+ */
+
+// 由于autoAddSubiew默认为NO，则可能是造成下拉刷新的timeBanner的superview为nil的
+// 原因。
+@property (nonatomic, assign) BOOL autoAddSubview;
+
+/**
+ If it is NO, LazyScrollView will try to load new item views in several frames.
+ Default value is YES.
+ */
+@property (nonatomic, assign) BOOL loadAllItemsImmediately;
 
 @end
