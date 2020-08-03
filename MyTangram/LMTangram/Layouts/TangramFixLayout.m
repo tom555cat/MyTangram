@@ -12,7 +12,8 @@
 #import "TangramContext.h"
 #import "TangramEvent.h"
 #import "TMUtils.h"
-#import <VirtualView/UIView+VirtualView.h>
+#import "UIView+VirtualView.h"
+#import "UIView+TMLazyScrollView.h"
 
 @interface TangramFixLayout()
 

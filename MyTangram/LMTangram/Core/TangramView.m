@@ -9,11 +9,12 @@
 #import "TangramView.h"
 #import "UIView+VirtualView.h"
 #import "TMUtils.h"
-#import "LMTangramLayoutProtocol.h"
+#import "TangramLayoutProtocol.h"
 #import "TangramStickyLayout.h"
 #import "TangramDragableLayout.h"
 #import "TangramFixLayout.h"
 #import "TMLazyItemModel.h"
+#import "UIView+TMLazyScrollView.h"
 
 @interface TangramView ()
 
@@ -122,7 +123,7 @@
         for (int i=0; i< numberOfLayouts; i++) {
             NSString *layoutKey = [NSString stringWithFormat:@"%d", i];
             // BUSMARK - get layout
-            UIView<LMTangramLayoutProtocol> *layout = [self.clDataSource layoutInTangramView:self atIndex:i];
+            UIView<TangramLayoutProtocol> *layout = [self.clDataSource layoutInTangramView:self atIndex:i];
             // 将layout存放进layoutDict中，key为index
             [self.layoutDict tm_safeSetObject:layout forKey:layoutKey];
             // key为index
@@ -204,40 +205,40 @@
     CGFloat contentWidth = 0.f;
     CGFloat topOffset = 0.f;
     NSMutableDictionary *zIndexLayoutDict = [[NSMutableDictionary alloc]init];
-    for (UIView<LMTangramLayoutProtocol> *layout in self.stickyLayoutArray) {
+    for (UIView<TangramLayoutProtocol> *layout in self.stickyLayoutArray) {
         // 对于可悬浮的layout，先将其进入悬浮状态置为NO
         ((TangramStickyLayout *)layout).enterFloatStatus = NO;
     }
     for (int i=0; i< self.layoutKeyArray.count; i++) {
         NSString *layoutKey = [self.layoutKeyArray tm_stringAtIndex:i];
-        UIView<LMTangramLayoutProtocol> *layout = [self.layoutDict tm_safeObjectForKey:layoutKey];
+        UIView<TangramLayoutProtocol> *layout = [self.layoutDict tm_safeObjectForKey:layoutKey];
         NSUInteger numberOfItemsInLayout = [self.clDataSource numberOfItemsInTangramView:self forLayout:layout];
         [self.numberOfItemsInlayout tm_safeSetObject:@(numberOfItemsInLayout) forKey:layoutKey];
         // 根据Layout的实现，计算其上边距
         CGFloat marginTop       = 0.f;
         // Make sure there are something in itemModel of layout
-        if ([layout conformsToProtocol:@protocol(LMTangramLayoutProtocol)]
+        if ([layout conformsToProtocol:@protocol(TangramLayoutProtocol)]
             && [layout respondsToSelector:@selector(marginTop)] && layout.itemModels.count > 0) {
             marginTop = [layout marginTop];
         }
         
         // 根据Layout的实现，计算其右边距
         CGFloat marginRight     = 0.f;
-        if ([layout conformsToProtocol:@protocol(LMTangramLayoutProtocol)]
+        if ([layout conformsToProtocol:@protocol(TangramLayoutProtocol)]
             && [layout respondsToSelector:@selector(marginRight)] && layout.itemModels.count > 0) {
             marginRight = [layout marginRight];
         }
         
         // 根据Layout的实现，计算其左边距
         CGFloat marginBottom    = 0.f;
-        if ([layout conformsToProtocol:@protocol(LMTangramLayoutProtocol)]
+        if ([layout conformsToProtocol:@protocol(TangramLayoutProtocol)]
             && [layout respondsToSelector:@selector(marginBottom)] && layout.itemModels.count > 0) {
             marginBottom = [layout marginBottom];
         }
         
         // 根据Layout的实现，计算其右边距
         CGFloat marginLeft      = 0.f;
-        if ([layout conformsToProtocol:@protocol(LMTangramLayoutProtocol)]
+        if ([layout conformsToProtocol:@protocol(TangramLayoutProtocol)]
             && [layout respondsToSelector:@selector(marginLeft)] && layout.itemModels.count > 0) {
             marginLeft = [layout marginLeft];
         }
@@ -311,6 +312,7 @@
                                           CGRectGetWidth(self.frame) - marginLeft - marginRight, layout.frame.size.height);
             }
             else{
+                // ** 这里仅仅计算了layout的宽度，高度还是0
                 layout.frame = CGRectMake(marginLeft, marginTop + layoutTop,
                                           CGRectGetWidth(self.frame) - marginLeft - marginRight, layout.frame.size.height);
             }
@@ -321,6 +323,7 @@
             if(calculate)
             {
                 //BUSMARK - layout布局
+                // ***计算自己的布局
                 [layout calculateLayout];
             }
             if (self.enableMarginDeduplication) {
@@ -387,7 +390,7 @@
         [self bringSubviewToFront:layout];
     }
     
-    for (UIView<LMTangramLayoutProtocol> *layout in self.stickyLayoutArray) {
+    for (UIView<TangramLayoutProtocol> *layout in self.stickyLayoutArray) {
         //目前仅处理吸顶类型的顶部额外offset
         if (((TangramStickyLayout *)layout).stickyBottom == NO) {
             if (self.fixExtraOffset > 0.f) {
@@ -402,7 +405,7 @@
         }
         [self bringSubviewToFront:layout];
     }
-    for (UIView<LMTangramLayoutProtocol> *layout in self.fixLayoutArray) {
+    for (UIView<TangramLayoutProtocol> *layout in self.fixLayoutArray) {
         [self bringSubviewToFront:layout];
     }
     //这个动作，是为了保证让Fixlayout的frame不因为contentOffset的突然改变而改变固定和浮动布局的位置
@@ -483,6 +486,31 @@
     return _dragableLayoutArray;
 }
 
+-(void)reLayoutContent
+{
+//    // Record the first time of call this method,
+//    // This method will call `heightChanged` once every 500ms max.
+//    /** 每次收到relaod请求都延迟100毫秒，在延迟窗口内若没有新请求则执行reload，若有则继续延迟100毫秒，直至延迟上限（500毫秒）**/
+//    self.numberOfReloadRequests += 1;
+//    int currentNumber = self.numberOfReloadRequests;
+//    // 初始化首次请求时间
+//    if (0 >= self.firstReloadRequestTS) {
+//        self.firstReloadRequestTS = [[NSDate date] timeIntervalSince1970];
+//    }
+//    __weak typeof(self) wself = self;
+//    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+//        __strong typeof(wself) sself = wself;
+//        NSTimeInterval now = [[NSDate date] timeIntervalSince1970];
+//        // 没有新请求，或超过500毫秒了
+//        // block里用到的currentNumber是copy的
+//        if (currentNumber == sself.numberOfReloadRequests
+//            || 500 < now - sself.firstReloadRequestTS) {
+//            sself.firstReloadRequestTS = 0;
+//            [sself heightChanged];
+//        }
+//    });
+}
+
 #pragma mark - DataSource 3个方法
 - (NSUInteger)numberOfItemsInScrollView:(TMLazyScrollView *)scrollView {
     NSUInteger number = 0;
@@ -512,20 +540,20 @@
     // 找到该item对应的layout index
     NSString *layoutKey = [self.itemLayoutIndex tm_safeObjectForKey:scrollIndex];
     // 根据layout index找到layout
-    UIView<LMTangramLayoutProtocol> *layout = [self.layoutDict tm_safeObjectForKey:layoutKey];
+    UIView<TangramLayoutProtocol> *layout = [self.layoutDict tm_safeObjectForKey:layoutKey];
     if (layout) {
         // 找到layout的第一个item的index(拍扁之后)
         NSUInteger layoutStartNumber = [[self.layoutStartNumberIndex tm_safeObjectForKey:layoutKey] unsignedIntegerValue];
         // 获取item在layout中的相对index，从0开始，以便于从layout.itemModels中获取itemModel
         NSUInteger itemModelNumber = index - layoutStartNumber;
-        NSObject<LMTangramItemModelProtocol> *model = [layout.itemModels tm_safeObjectAtIndex:itemModelNumber];
+        NSObject<TangramItemModelProtocol> *model = [layout.itemModels tm_safeObjectAtIndex:itemModelNumber];
         if (model) {
             // layout.identifier来源于JSON中的card的id字段
             NSString *layoutIdentifier = layout.identifier;
             if ([model respondsToSelector:@selector(innerItemModel)] && model.innerItemModel && model.inLayoutIdentifier && model.inLayoutIdentifier.length > 0
                 && [layout respondsToSelector:@selector(subLayoutIdentifiers)] &&
                 [layout.subLayoutIdentifiers containsObject:model.inLayoutIdentifier]) {
-                UIView<LMTangramLayoutProtocol> *subLayout = [layout.subLayoutDict tm_safeObjectForKey:model.inLayoutIdentifier];
+                UIView<TangramLayoutProtocol> *subLayout = [layout.subLayoutDict tm_safeObjectForKey:model.inLayoutIdentifier];
                 layoutIdentifier = subLayout.identifier;
             }
             NSString *muiID = [NSString stringWithFormat:@"%@_%@_%@_%@_%ld",
@@ -545,7 +573,7 @@
             if ([model respondsToSelector:@selector(innerItemModel)] && model.innerItemModel && model.inLayoutIdentifier && model.inLayoutIdentifier.length > 0
                 && [layout respondsToSelector:@selector(subLayoutIdentifiers)] &&
                 [layout.subLayoutIdentifiers containsObject:model.inLayoutIdentifier]) {
-                UIView<LMTangramLayoutProtocol> *subLayout = [layout.subLayoutDict tm_safeObjectForKey:model.inLayoutIdentifier];
+                UIView<TangramLayoutProtocol> *subLayout = [layout.subLayoutDict tm_safeObjectForKey:model.inLayoutIdentifier];
                 absTop += subLayout.vv_top;
                 absLeft += subLayout.vv_left;
             }
@@ -568,13 +596,13 @@
         && [self.clDataSource conformsToProtocol:@protocol(TangramViewDatasource)]
         && [self.clDataSource respondsToSelector:@selector(itemInTangramView:withModel:forLayout:atIndex:)]) {
         // 从muiID获取对应的ItemModel
-        NSObject<LMTangramItemModelProtocol> *model = [self.muiIDModelIndex tm_safeObjectForKey:muiID];
+        NSObject<TangramItemModelProtocol> *model = [self.muiIDModelIndex tm_safeObjectForKey:muiID];
         // 从muiID获取对应的flat之后的item的index
         NSString *scrollIndex = [self.muiIDIndexIndex tm_safeObjectForKey:muiID];
         // 从flat之后的item的index获取layout的index
         NSString *layoutKey = [self.itemLayoutIndex tm_safeObjectForKey:scrollIndex];
         // 从layout index获取layout
-        UIView<LMTangramLayoutProtocol> *layout = [self.layoutDict tm_safeObjectForKey:layoutKey];
+        UIView<TangramLayoutProtocol> *layout = [self.layoutDict tm_safeObjectForKey:layoutKey];
         // 找到layout的第一个flat之后的itemModel的index
         NSString *layoutStartIndex = [self.layoutStartNumberIndex tm_stringForKey:layoutKey];
         // 获取layout的itemModel的绝对index
@@ -589,7 +617,7 @@
             && model.inLayoutIdentifier && model.inLayoutIdentifier.length > 0
             && [layout respondsToSelector:@selector(subLayoutIdentifiers)] &&
             [layout.subLayoutIdentifiers containsObject:model.inLayoutIdentifier]) {
-            UIView<LMTangramLayoutProtocol> *subLayout = [layout.subLayoutDict tm_safeObjectForKey:model.inLayoutIdentifier];
+            UIView<TangramLayoutProtocol> *subLayout = [layout.subLayoutDict tm_safeObjectForKey:model.inLayoutIdentifier];
             if([subLayout respondsToSelector:@selector(headerItemModel)] && subLayout.headerItemModel == model
                && [layout respondsToSelector:@selector(addHeaderView:)])
             {

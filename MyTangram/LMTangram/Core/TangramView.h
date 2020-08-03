@@ -75,6 +75,9 @@
 
 @interface TangramView : TMLazyScrollView
 
+// Extra offset in vertical for StickyLayout and FixLayout
+@property   (nonatomic, assign) CGFloat fixExtraOffset;
+
 // Contains layouts in TangramView. Key ：layout index；value：layout
 @property   (nonatomic, strong, readonly) NSMutableDictionary     *layoutDict;
 
@@ -85,6 +88,9 @@
 
 // Refresh view according to datasource.
 - (void)reloadData;
+
+// When height of layer is changed and the model is not changed, call this method.
+- (void)reLayoutContent;
 
 @end
 

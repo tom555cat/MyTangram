@@ -7,6 +7,7 @@
 
 #import "TMLazyReusePool.h"
 #import "UIView+TMLazyScrollView.h"
+#import "TMUtils.h"
 
 @interface TMLazyReusePool () {
     NSMutableDictionary<NSString *, NSMutableSet *> *_reuseDict;

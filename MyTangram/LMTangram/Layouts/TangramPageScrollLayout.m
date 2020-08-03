@@ -11,13 +11,14 @@
 #import "TangramView.h"
 #import "UIImageView+WebCache.h"
 #import "TangramEvent.h"
-#import <VirtualView/UIView+VirtualView.h>
+#import "UIView+VirtualView.h"
 #import "UIView+Tangram.h"
 #import "TMUtils.h"
-#import <VirtualView/UIColor+VirtualView.h>
+#import "UIColor+VirtualView.h"
 #import "TangramProgressBar.h"
 #import "TangramPageControl.h"
 #import <Foundation/Foundation.h>
+#import "UIView+TMLazyScrollView.h"
 
 @interface TangramPageScrollLayoutTimerAction : NSObject
 

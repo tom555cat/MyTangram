@@ -7,11 +7,11 @@
 //
 
 #import "ViewController.h"
-#import "LMTangramDefaultItemModelFactory.h"
-#import "LMTangramDefaultDataSourceHelper.h"
+#import "TangramDefaultItemModelFactory.h"
+#import "TangramDefaultDataSourceHelper.h"
 #import "TangramBus.h"
 #import "TangramView.h"
-#import "LMTangramLayoutProtocol.h"
+#import "TangramLayoutProtocol.h"
 
 @interface ViewController () <TangramViewDatasource>
 
@@ -46,10 +46,10 @@
     self.layoutModelArray = [[dict objectForKey:@"data"] objectForKey:@"cards"];
     
     // 注册type和elementClass
-    [LMTangramDefaultItemModelFactory registElementType:@"image" className:@"TangramSingleImageElement"];
-    [LMTangramDefaultItemModelFactory registElementType:@"text" className:@"TangramSimpleTextElement"];
+    [TangramDefaultItemModelFactory registElementType:@"image" className:@"TangramSingleImageElement"];
+    [TangramDefaultItemModelFactory registElementType:@"text" className:@"TangramSimpleTextElement"];
     
-    self.layoutArray = [LMTangramDefaultDataSourceHelper layoutsWithArray:self.layoutModelArray tangramBus:self.tangramBus];
+    self.layoutArray = [TangramDefaultDataSourceHelper layoutsWithArray:self.layoutModelArray tangramBus:self.tangramBus];
 }
 
 - (void)registEvent {
@@ -89,25 +89,25 @@
     return self.layoutArray.count;
 }
 
-- (UIView<LMTangramLayoutProtocol> *)layoutInTangramView:(TangramView *)view atIndex:(NSUInteger)index {
+- (UIView<TangramLayoutProtocol> *)layoutInTangramView:(TangramView *)view atIndex:(NSUInteger)index {
     return [self.layoutArray objectAtIndex:index];
 }
 
-- (NSUInteger)numberOfItemsInTangramView:(TangramView *)view forLayout:(UIView<LMTangramLayoutProtocol> *)layout {
+- (NSUInteger)numberOfItemsInTangramView:(TangramView *)view forLayout:(UIView<TangramLayoutProtocol> *)layout {
     return layout.itemModels.count;
 }
 
-- (NSObject<LMTangramItemModelProtocol> *)itemModelInTangramView:(TangramView *)view forLayout:(UIView<LMTangramLayoutProtocol> *)layout atIndex:(NSUInteger)index {
+- (NSObject<TangramItemModelProtocol> *)itemModelInTangramView:(TangramView *)view forLayout:(UIView<TangramLayoutProtocol> *)layout atIndex:(NSUInteger)index {
     return [layout.itemModels objectAtIndex:index];
 }
 
-- (UIView *)itemInTangramView:(TangramView *)view withModel:(NSObject<LMTangramItemModelProtocol> *)model forLayout:(UIView<LMTangramLayoutProtocol> *)layout atIndex:(NSUInteger)index {
+- (UIView *)itemInTangramView:(TangramView *)view withModel:(NSObject<TangramItemModelProtocol> *)model forLayout:(UIView<TangramLayoutProtocol> *)layout atIndex:(NSUInteger)index {
     UIView *reuseableView = [view dequeueReusableItemWithIdentifier:model.reuseIdentifier];
     if (reuseableView) {
         // 找到了一个可以重用的view，刷新其中的数据
-        reuseableView = [LMTangramDefaultDataSourceHelper refreshElement:reuseableView byModel:model layout:layout tangramBus:self.tangramBus];
+        reuseableView = [TangramDefaultDataSourceHelper refreshElement:reuseableView byModel:model layout:layout tangramBus:self.tangramBus];
     } else {
-        reuseableView = [LMTangramDefaultDataSourceHelper elementByModel:model layout:layout tangramBus:self.tangramBus];
+        reuseableView = [TangramDefaultDataSourceHelper elementByModel:model layout:layout tangramBus:self.tangramBus];
     }
     return reuseableView;
 }

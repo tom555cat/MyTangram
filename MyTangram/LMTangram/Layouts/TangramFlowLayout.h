@@ -6,14 +6,14 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "LMTangramLayoutProtocol.h"
+#import "TangramLayoutProtocol.h"
 #import "TangramView.h"
 typedef NS_ENUM(NSUInteger,TangramFlowLayoutBgImageScaleType)
 {
     TangramFlowLayoutBgImageScaleTypeFitXY = 0,
     TangramFlowLayoutBgImageScaleTypeFitStart
 };
-@interface TangramFlowLayout : UIView<LMTangramLayoutProtocol>
+@interface TangramFlowLayout : UIView<TangramLayoutProtocol>
 
 // Models Array , as protocol request.
 @property   (nonatomic, strong) NSArray         *itemModels;

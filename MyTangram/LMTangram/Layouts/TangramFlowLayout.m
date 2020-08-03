@@ -11,7 +11,7 @@
 #import "UIImageView+WebCache.h"
 #import "SDWebImageManager.h"
 #import "TangramEvent.h"
-#import <VirtualView/UIView+VirtualView.h>
+#import "UIView+VirtualView.h"
 #import "TMUtils.h"
 
 @interface TangramFlowLayout()
@@ -281,6 +281,7 @@
         [self.firstElementModelInRow removeAllObjects];
     }
 
+    // 计算每一行（例子中有3行数据）
     for (int i=0; i<maxRows; i++) {
          BOOL isFirstColumn = YES;
         // 计算组件宽度

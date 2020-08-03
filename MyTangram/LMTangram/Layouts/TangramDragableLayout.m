@@ -6,7 +6,7 @@
 //
 
 #import "TangramDragableLayout.h"
-#import <VirtualView/UIView+VirtualView.h>
+#import "UIView+VirtualView.h"
 #import "TangramItemModelProtocol.h"
 #import "TangramView.h"
 @interface TangramDragableLayout ()

@@ -8,8 +8,8 @@
 #import "TangramScrollWaterFlowLayout.h"
 #import "TangramScrollFlowLayout.h"
 #import "TangramEvent.h"
-#import <VirtualView/UIColor+VirtualView.h>
-#import <VirtualView/UIView+VirtualView.h>
+#import "UIColor+VirtualView.h"
+#import "UIView+VirtualView.h"
 #import "TMUtils.h"
 
 

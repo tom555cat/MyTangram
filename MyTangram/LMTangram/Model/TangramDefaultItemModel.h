@@ -6,10 +6,11 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "LMTangramItemModelProtocol.h"
+#import "TangramItemModelProtocol.h"
 #import "TMLazyScrollView.h"
+#import "TMLazyItemModel.h"
 
-@interface TangramDefaultItemModel : TMLazyItemModel <LMTangramItemModelProtocol>
+@interface TangramDefaultItemModel : TMLazyItemModel <TangramItemModelProtocol>
 
 // type
 @property (nonatomic, strong) NSString *type;

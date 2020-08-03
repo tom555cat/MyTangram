@@ -11,6 +11,7 @@
 #import "TMLazyItemViewProtocol.h"
 #import "TMLazyModelBucket.h"
 #import "TMLazyItemModel.h"
+#import "TMUtils.h"
 
 #define LazyBufferHeight 20
 #define LazyBucketHeight 400
